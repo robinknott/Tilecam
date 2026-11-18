@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tilecam</string>
+    <string name="app_tagline">Your cameras, one wall.</string>
+
+    <string name="home_add_camera">Add camera</string>
+    <string name="home_scan">Scan network</string>
+    <string name="home_settings">Settings</string>
+    <string name="home_empty_title">No cameras yet</string>
+    <string name="home_empty_body">Scan your network to find cameras automatically, or add one by hand.</string>
+
+    <string name="scan_title">Find cameras</string>
+    <string name="scan_lan">Scan local network (LAN)</string>
+    <string name="scan_wan">Scan an IP range (WAN)</string>
+    <string name="scan_onvif">ONVIF auto-discovery</string>
+    <string name="scan_running">Scanning…</string>
+    <string name="scan_stop">Stop</string>
+    <string name="scan_found">%1$d found</string>
+
+    <string name="creds_title">Sign in to camera</string>
+    <string name="creds_username">Username</string>
+    <string name="creds_password">Password</string>
+    <string name="creds_connect">Connect</string>
+    <string name="creds_default_hint">Default for %1$s pre-filled — change if you set your own.</string>
+
+    <string name="player_reconnecting">Reconnecting…</string>
+    <string name="player_error">Stream error</string>
+</resources>

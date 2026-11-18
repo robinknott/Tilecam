@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#0B0E14" android:pathData="M0,0h320v180h-320z" />
+    <group android:translateX="36" android:translateY="58">
+        <path android:fillColor="#3DDC97" android:pathData="M0,0h28v28h-28z" />
+        <path android:fillColor="#2A3344" android:pathData="M36,0h28v28h-28z" />
+        <path android:fillColor="#2A3344" android:pathData="M0,36h28v28h-28z" />
+        <path android:fillColor="#2A3344" android:pathData="M36,36h28v28h-28z" />
+    </group>
+    <!-- Wordmark drawn as simple blocks to stay asset-free; replace with final art later -->
+    <group android:translateX="130" android:translateY="76">
+        <path android:fillColor="#F4F6FB" android:pathData="M0,0h120v10h-120z" />
+        <path android:fillColor="#9AA7BD" android:pathData="M0,20h78v6h-78z" />
+    </group>
+</vector>
