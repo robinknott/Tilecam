@@ -25,6 +25,8 @@ sealed interface Screen {
     data object Scan : Screen
     data class Credentials(val device: DiscoveredDevice) : Screen
     data class Player(val cameraId: String) : Screen
+    data class Recordings(val cameraId: String) : Screen
+    data class Playback(val cameraId: String, val url: String, val title: String) : Screen
     data object Settings : Screen
 }
 
@@ -71,6 +73,8 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
             is Screen.Credentials -> Screen.Scan
             is Screen.Scan -> Screen.Home
             is Screen.Player -> Screen.Home
+            is Screen.Recordings -> Screen.Player(current.cameraId)
+            is Screen.Playback -> Screen.Recordings(current.cameraId)
             is Screen.Settings -> Screen.Home
             else -> Screen.Home
         }
@@ -185,6 +189,26 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun cameraById(id: String): Camera? = cameras.value.firstOrNull { it.id == id }
+
+    /** Whether this camera's vendor exposes time-ranged SD-card/NVR playback. */
+    fun supportsPlayback(camera: Camera): Boolean =
+        VendorDatabase.byId(camera.vendorId).supportsPlayback
+
+    /** Build a playback RTSP URL for a time window, or null if unsupported. */
+    fun buildPlayback(camera: Camera, startMillis: Long, endMillis: Long): String? {
+        val creds = container.credentialStore.get(camera.id) ?: return null
+        val vendor = VendorDatabase.byId(camera.vendorId)
+        return VendorDatabase.buildPlaybackUrl(
+            vendor, camera.host, creds.username, creds.password,
+            startMillis, endMillis, camera.rtspPort,
+        )
+    }
+
+    fun openPlayback(camera: Camera, startMillis: Long, endMillis: Long) {
+        val url = buildPlayback(camera, startMillis, endMillis) ?: return
+        val label = "${camera.name} — opptak"
+        navigate(Screen.Playback(camera.id, url, label))
+    }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

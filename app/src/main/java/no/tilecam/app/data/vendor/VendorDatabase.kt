@@ -20,6 +20,8 @@ object VendorDatabase {
             onvifPorts = listOf(80, 8000),
             mainPath = "/Streaming/Channels/{channel}01",
             subPath = "/Streaming/Channels/{channel}02",
+            playbackPath = "/Streaming/tracks/{channel}01?starttime={start}&endtime={end}",
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.HIK_ISO_UTC,
             onvifManufacturerPatterns = listOf("hikvision"),
             serverHeaderPatterns = listOf("hikvision", "dnvrs-webs", "web server"),
             hostnamePatterns = listOf("hikvision", "ds-", "hik-"),
@@ -33,6 +35,8 @@ object VendorDatabase {
             onvifPorts = listOf(80, 8000),
             mainPath = "/Streaming/Channels/{channel}01",
             subPath = "/Streaming/Channels/{channel}02",
+            playbackPath = "/Streaming/tracks/{channel}01?starttime={start}&endtime={end}",
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.HIK_ISO_UTC,
             onvifManufacturerPatterns = listOf("annke"),
             hostnamePatterns = listOf("annke"),
         ),
@@ -44,6 +48,8 @@ object VendorDatabase {
             onvifPorts = listOf(80),
             mainPath = "/cam/realmonitor?channel={channel}&subtype=0",
             subPath = "/cam/realmonitor?channel={channel}&subtype=1",
+            playbackPath = "/cam/playback?channel={channel}&starttime={start}&endtime={end}",
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.DAHUA_LOCAL,
             onvifManufacturerPatterns = listOf("dahua"),
             serverHeaderPatterns = listOf("dahua", "webs"),
             hostnamePatterns = listOf("dahua", "dh-", "ipc-"),
@@ -56,6 +62,8 @@ object VendorDatabase {
             defaultPasswords = listOf("admin", ""),
             mainPath = "/cam/realmonitor?channel={channel}&subtype=0",
             subPath = "/cam/realmonitor?channel={channel}&subtype=1",
+            playbackPath = "/cam/playback?channel={channel}&starttime={start}&endtime={end}",
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.DAHUA_LOCAL,
             onvifManufacturerPatterns = listOf("amcrest"),
             hostnamePatterns = listOf("amcrest", "amc-"),
             signalPorts = listOf(37777),
@@ -67,6 +75,8 @@ object VendorDatabase {
             defaultPasswords = listOf(""),
             mainPath = "/cam/realmonitor?channel={channel}&subtype=0",
             subPath = "/cam/realmonitor?channel={channel}&subtype=1",
+            playbackPath = "/cam/playback?channel={channel}&starttime={start}&endtime={end}",
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.DAHUA_LOCAL,
             onvifManufacturerPatterns = listOf("lorex"),
             hostnamePatterns = listOf("lorex"),
             signalPorts = listOf(37777),
@@ -276,6 +286,52 @@ object VendorDatabase {
             "${urlEncode(user)}:${urlEncode(pass)}@" else ""
         val sep = if (path.startsWith("/")) "" else "/"
         return "rtsp://$creds$host:$port$sep$path"
+    }
+
+    /**
+     * Build a credentialed RTSP URL that plays back SD-card/NVR footage for a
+     * time window. Returns null when the vendor has no playback template.
+     */
+    fun buildPlaybackUrl(
+        vendor: Vendor,
+        host: String,
+        user: String,
+        pass: String,
+        startMillis: Long,
+        endMillis: Long,
+        port: Int = vendor.rtspPort,
+        channel: Int = 1,
+    ): String? {
+        val template = vendor.playbackPath ?: return null
+        val start = formatPlaybackTime(startMillis, vendor.playbackTimeFormat) ?: return null
+        val end = formatPlaybackTime(endMillis, vendor.playbackTimeFormat) ?: return null
+        val path = template
+            .replace("{channel}", channel.toString())
+            .replace("{start}", start)
+            .replace("{end}", end)
+        val creds = if (user.isNotEmpty())
+            "${urlEncode(user)}:${urlEncode(pass)}@" else ""
+        val sep = if (path.startsWith("/")) "" else "/"
+        return "rtsp://$creds$host:$port$sep$path"
+    }
+
+    private fun formatPlaybackTime(millis: Long, fmt: Vendor.PlaybackTimeFormat): String? {
+        val pattern: String
+        val tz: java.util.TimeZone
+        when (fmt) {
+            Vendor.PlaybackTimeFormat.HIK_ISO_UTC -> {
+                pattern = "yyyyMMdd'T'HHmmss'Z'"
+                tz = java.util.TimeZone.getTimeZone("UTC")
+            }
+            Vendor.PlaybackTimeFormat.DAHUA_LOCAL -> {
+                pattern = "yyyy_MM_dd_HH_mm_ss"
+                tz = java.util.TimeZone.getDefault()
+            }
+            Vendor.PlaybackTimeFormat.NONE -> return null
+        }
+        val sdf = java.text.SimpleDateFormat(pattern, java.util.Locale.US)
+        sdf.timeZone = tz
+        return sdf.format(java.util.Date(millis))
     }
 
     private fun urlEncode(s: String): String =

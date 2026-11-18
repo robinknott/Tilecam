@@ -10,7 +10,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import no.tilecam.app.ui.screens.CredentialsScreen
 import no.tilecam.app.ui.screens.HomeScreen
+import no.tilecam.app.ui.screens.PlaybackScreen
 import no.tilecam.app.ui.screens.PlayerScreen
+import no.tilecam.app.ui.screens.RecordingsScreen
 import no.tilecam.app.ui.screens.ScanScreen
 import no.tilecam.app.ui.screens.SettingsScreen
 
@@ -68,10 +70,35 @@ fun TilecamRoot(vm: MainViewModel) {
                 BackHandler { vm.back() }
                 val camera = vm.cameraById(s.cameraId)
                 if (camera != null) {
-                    PlayerScreen(camera = camera, url = vm.playableUrl(camera))
+                    PlayerScreen(
+                        camera = camera,
+                        url = vm.playableUrl(camera),
+                        canRecord = vm.supportsPlayback(camera),
+                        onOpenRecordings = { vm.navigate(Screen.Recordings(camera.id)) },
+                    )
                 } else {
                     vm.back()
                 }
+            }
+
+            is Screen.Recordings -> {
+                BackHandler { vm.back() }
+                val camera = vm.cameraById(s.cameraId)
+                if (camera != null) {
+                    RecordingsScreen(
+                        camera = camera,
+                        supported = vm.supportsPlayback(camera),
+                        onPlay = { start, end -> vm.openPlayback(camera, start, end) },
+                        onBack = { vm.back() },
+                    )
+                } else {
+                    vm.back()
+                }
+            }
+
+            is Screen.Playback -> {
+                BackHandler { vm.back() }
+                PlaybackScreen(title = s.title, url = s.url)
             }
 
             is Screen.Settings -> {

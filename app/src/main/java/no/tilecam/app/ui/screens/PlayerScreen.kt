@@ -15,16 +15,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.Button
+import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import no.tilecam.app.data.model.Camera
 import no.tilecam.app.player.CameraVideo
 import no.tilecam.app.player.StreamState
+import no.tilecam.app.ui.theme.Accent
 
 @Composable
 fun PlayerScreen(
     camera: Camera,
     url: String?,
+    canRecord: Boolean = false,
+    onOpenRecordings: () -> Unit = {},
 ) {
     var state by remember(url) { mutableStateOf(StreamState.LOADING) }
 
@@ -63,6 +68,17 @@ fun PlayerScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xCCFFFFFF),
             )
+        }
+        if (canRecord) {
+            Box(Modifier.align(Alignment.TopEnd).padding(28.dp)) {
+                Button(
+                    onClick = onOpenRecordings,
+                    colors = ButtonDefaults.colors(
+                        containerColor = Accent,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                ) { Text("Opptak ›", fontWeight = FontWeight.SemiBold) }
+            }
         }
     }
 }

@@ -21,6 +21,10 @@ data class Vendor(
     val mainPath: String? = null,
     /** RTSP path for the sub (low-res) stream. */
     val subPath: String? = null,
+    /** RTSP path for time-ranged SD-card/NVR playback. Tokens: {channel} {start} {end}. */
+    val playbackPath: String? = null,
+    /** How this vendor formats the start/end timestamps in [playbackPath]. */
+    val playbackTimeFormat: PlaybackTimeFormat = PlaybackTimeFormat.NONE,
     // ---- detection signatures ----
     val onvifManufacturerPatterns: List<String> = emptyList(),
     val serverHeaderPatterns: List<String> = emptyList(),
@@ -28,6 +32,17 @@ data class Vendor(
     /** Ports that strongly hint at this vendor (e.g. Dahua private port 37777). */
     val signalPorts: List<Int> = emptyList(),
 ) {
+    /** Timestamp format used by a vendor's playback-by-time RTSP URL. */
+    enum class PlaybackTimeFormat {
+        /** Hikvision: ISO-8601 basic, UTC, e.g. 20261118T200000Z */
+        HIK_ISO_UTC,
+        /** Dahua family: local time, e.g. 2026_11_18_20_00_00 */
+        DAHUA_LOCAL,
+        NONE,
+    }
+
+    val supportsPlayback: Boolean get() = playbackPath != null
+
     val defaultUsername: String get() = defaultUsernames.firstOrNull() ?: "admin"
     val defaultPassword: String get() = defaultPasswords.firstOrNull() ?: ""
 

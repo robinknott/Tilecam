@@ -34,6 +34,7 @@ fun CameraVideo(
     modifier: Modifier = Modifier,
     muted: Boolean = true,
     resizeFill: Boolean = false,
+    showControls: Boolean = false,
     onState: (StreamState) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -78,7 +79,7 @@ fun CameraVideo(
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
-                    useController = false
+                    useController = showControls
                     setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                     resizeMode = if (resizeFill)
                         AspectRatioFrameLayout.RESIZE_MODE_ZOOM
