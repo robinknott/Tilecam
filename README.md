@@ -45,7 +45,7 @@ You don't need Android Studio to get an installable APK — GitHub builds it for
 1. Push this repo to GitHub (see below). The **Build Tilecam APK** workflow runs
    automatically.
 2. Open the **Actions** tab → the latest run → **Artifacts** →
-   download **`tilecam-release`**. Unzip to get `app-release.apk`.
+   download **`Tilecam-release`**. Unzip to get `Tilecam-release.apk`.
 3. To publish a versioned download, push a tag:
    ```bash
    git tag v1.0.0 && git push origin v1.0.0
@@ -62,7 +62,7 @@ Sideload the APK (the app is not on Google Play):
 - **adb** (from a computer on the same network):
   ```bash
   adb connect <tv-ip>:5555
-  adb install app-release.apk
+  adb install Tilecam-release.apk
   ```
 
 ---
@@ -75,7 +75,7 @@ Requires JDK 17 and the Android SDK (Android Studio Ladybug or newer).
 # Android Studio generates the Gradle wrapper on first open; or from CLI:
 gradle wrapper --gradle-version 8.11.1
 ./gradlew assembleRelease
-# → app/build/outputs/apk/release/app-release.apk
+# → app/build/outputs/apk/release/Tilecam-release.apk
 ```
 
 Open the folder in Android Studio and press **Run** to deploy to an Android TV

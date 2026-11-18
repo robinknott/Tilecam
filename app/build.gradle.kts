@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+base {
+    // Names the build outputs: Tilecam-release.apk / Tilecam-debug.apk
+    archivesName.set("Tilecam")
+}
+
 android {
     namespace = "no.tilecam.app"
     compileSdk = 35
