@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Tilecam" parent="@style/Theme.Material.NoActionBar">
+    <style name="Theme.Tilecam" parent="@android:style/Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/tilecam_background</item>
         <item name="android:colorBackground">@color/tilecam_background</item>
         <item name="android:statusBarColor">@color/tilecam_background</item>
