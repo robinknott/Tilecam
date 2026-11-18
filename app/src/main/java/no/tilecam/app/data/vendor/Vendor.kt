@@ -34,8 +34,8 @@ data class Vendor(
 ) {
     /** Timestamp format used by a vendor's playback-by-time RTSP URL. */
     enum class PlaybackTimeFormat {
-        /** Hikvision: ISO-8601 basic, UTC, e.g. 20261118T200000Z */
-        HIK_ISO_UTC,
+        /** Hikvision: ISO-8601 basic with 'Z' suffix, in the device's local time, e.g. 20261118T200000Z */
+        HIK_ISO,
         /** Dahua family: local time, e.g. 2026_11_18_20_00_00 */
         DAHUA_LOCAL,
         NONE,

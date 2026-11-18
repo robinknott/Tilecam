@@ -15,7 +15,9 @@ import no.tilecam.app.data.ConnectResult
 import no.tilecam.app.data.Credentials
 import no.tilecam.app.data.model.Camera
 import no.tilecam.app.data.model.DiscoveredDevice
+import no.tilecam.app.data.model.RecordingSegment
 import no.tilecam.app.data.model.ScanConfig
+import no.tilecam.app.discovery.RecordingSearch
 import no.tilecam.app.data.vendor.Vendor
 import no.tilecam.app.data.vendor.VendorDatabase
 import no.tilecam.app.discovery.ScanProgress
@@ -46,6 +48,15 @@ data class ConnectState(
     val error: String? = null,
 )
 
+data class RecordingSearchState(
+    val loading: Boolean = false,
+    val segments: List<RecordingSegment> = emptyList(),
+    val dayStartMillis: Long = 0,
+    val dayEndMillis: Long = 0,
+    val searched: Boolean = false,
+    val error: String? = null,
+)
+
 class MainViewModel(private val container: AppContainer) : ViewModel() {
 
     val cameras: StateFlow<List<Camera>> = container.cameraStore.cameras
@@ -59,6 +70,9 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _connect = MutableStateFlow(ConnectState())
     val connect: StateFlow<ConnectState> = _connect.asStateFlow()
+
+    private val _recSearch = MutableStateFlow(RecordingSearchState())
+    val recSearch: StateFlow<RecordingSearchState> = _recSearch.asStateFlow()
 
     private var scanJob: Job? = null
 
@@ -208,6 +222,44 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         val url = buildPlayback(camera, startMillis, endMillis) ?: return
         val label = "${camera.name} — opptak"
         navigate(Screen.Playback(camera.id, url, label))
+    }
+
+    /** Whether this vendor supports a real recordings timeline (not just manual time entry). */
+    fun supportsTimeline(camera: Camera): Boolean =
+        camera.vendorId == "hikvision" || camera.vendorId == "annke"
+
+    fun openRecordings(cameraId: String) {
+        _recSearch.value = RecordingSearchState()
+        navigate(Screen.Recordings(cameraId))
+    }
+
+    /** Query the camera for the recorded segments on a given day. */
+    fun searchRecordings(camera: Camera, dayStartMillis: Long, dayEndMillis: Long) {
+        val creds = container.credentialStore.get(camera.id)
+        if (creds == null) {
+            _recSearch.value = RecordingSearchState(error = "Mangler innlogging for dette kameraet.")
+            return
+        }
+        _recSearch.value = RecordingSearchState(
+            loading = true, dayStartMillis = dayStartMillis, dayEndMillis = dayEndMillis,
+        )
+        viewModelScope.launch {
+            val segs = RecordingSearch.search(
+                camera, creds.username, creds.password, dayStartMillis, dayEndMillis,
+            )
+            _recSearch.value = if (segs == null) {
+                RecordingSearchState(
+                    searched = true,
+                    error = "Tidslinje støttes ikke for denne modellen ennå — bruk manuelt valg.",
+                    dayStartMillis = dayStartMillis, dayEndMillis = dayEndMillis,
+                )
+            } else {
+                RecordingSearchState(
+                    segments = segs, searched = true,
+                    dayStartMillis = dayStartMillis, dayEndMillis = dayEndMillis,
+                )
+            }
+        }
     }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {

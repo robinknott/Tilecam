@@ -21,7 +21,7 @@ object VendorDatabase {
             mainPath = "/Streaming/Channels/{channel}01",
             subPath = "/Streaming/Channels/{channel}02",
             playbackPath = "/Streaming/tracks/{channel}01?starttime={start}&endtime={end}",
-            playbackTimeFormat = Vendor.PlaybackTimeFormat.HIK_ISO_UTC,
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.HIK_ISO,
             onvifManufacturerPatterns = listOf("hikvision"),
             serverHeaderPatterns = listOf("hikvision", "dnvrs-webs", "web server"),
             hostnamePatterns = listOf("hikvision", "ds-", "hik-"),
@@ -36,7 +36,7 @@ object VendorDatabase {
             mainPath = "/Streaming/Channels/{channel}01",
             subPath = "/Streaming/Channels/{channel}02",
             playbackPath = "/Streaming/tracks/{channel}01?starttime={start}&endtime={end}",
-            playbackTimeFormat = Vendor.PlaybackTimeFormat.HIK_ISO_UTC,
+            playbackTimeFormat = Vendor.PlaybackTimeFormat.HIK_ISO,
             onvifManufacturerPatterns = listOf("annke"),
             hostnamePatterns = listOf("annke"),
         ),
@@ -319,9 +319,10 @@ object VendorDatabase {
         val pattern: String
         val tz: java.util.TimeZone
         when (fmt) {
-            Vendor.PlaybackTimeFormat.HIK_ISO_UTC -> {
+            Vendor.PlaybackTimeFormat.HIK_ISO -> {
+                // Hikvision stamps times in the device's local time but suffixes 'Z'.
                 pattern = "yyyyMMdd'T'HHmmss'Z'"
-                tz = java.util.TimeZone.getTimeZone("UTC")
+                tz = java.util.TimeZone.getDefault()
             }
             Vendor.PlaybackTimeFormat.DAHUA_LOCAL -> {
                 pattern = "yyyy_MM_dd_HH_mm_ss"

@@ -22,6 +22,7 @@ fun TilecamRoot(vm: MainViewModel) {
     val cameras by vm.cameras.collectAsStateWithLifecycle()
     val scan by vm.scan.collectAsStateWithLifecycle()
     val connect by vm.connect.collectAsStateWithLifecycle()
+    val recSearch by vm.recSearch.collectAsStateWithLifecycle()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -74,7 +75,7 @@ fun TilecamRoot(vm: MainViewModel) {
                         camera = camera,
                         url = vm.playableUrl(camera),
                         canRecord = vm.supportsPlayback(camera),
-                        onOpenRecordings = { vm.navigate(Screen.Recordings(camera.id)) },
+                        onOpenRecordings = { vm.openRecordings(camera.id) },
                     )
                 } else {
                     vm.back()
@@ -88,6 +89,9 @@ fun TilecamRoot(vm: MainViewModel) {
                     RecordingsScreen(
                         camera = camera,
                         supported = vm.supportsPlayback(camera),
+                        timelineSupported = vm.supportsTimeline(camera),
+                        searchState = recSearch,
+                        onSearchDay = { start, end -> vm.searchRecordings(camera, start, end) },
                         onPlay = { start, end -> vm.openPlayback(camera, start, end) },
                         onBack = { vm.back() },
                     )
