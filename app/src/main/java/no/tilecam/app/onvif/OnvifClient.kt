@@ -32,9 +32,28 @@ class OnvifClient(
     private val port: Int,
     private val user: String,
     private val pass: String,
-    private val timeoutMs: Int = 6000,
+    private val timeoutMs: Int = 4000,
 ) {
     private val deviceUrl = "http://$host:$port/onvif/device_service"
+
+    enum class AuthStatus { OK, UNAUTHORIZED, UNREACHABLE }
+
+    /** Quick credential check via GetDeviceInformation. */
+    suspend fun checkAuth(): AuthStatus = withContext(Dispatchers.IO) {
+        val body = soap(
+            "http://www.onvif.org/ver10/device/wsdl", "<tds:GetDeviceInformation/>", nsTds = true,
+        )
+        val (code, resp) = postRaw(
+            deviceUrl, body, "http://www.onvif.org/ver10/device/wsdl/GetDeviceInformation",
+        )
+        when {
+            code == 401 -> AuthStatus.UNAUTHORIZED
+            resp != null && resp.contains("NotAuthorized", ignoreCase = true) -> AuthStatus.UNAUTHORIZED
+            code in 200..299 && resp != null && resp.contains("Manufacturer", ignoreCase = true) -> AuthStatus.OK
+            code == -1 -> AuthStatus.UNREACHABLE
+            else -> AuthStatus.UNREACHABLE
+        }
+    }
 
     suspend fun getDeviceInformation(): OnvifDeviceInfo? = withContext(Dispatchers.IO) {
         val body = soap(
@@ -152,6 +171,31 @@ class OnvifClient(
               </wsse:UsernameToken>
             </wsse:Security>
         """.trimIndent()
+    }
+
+    /** Like post(), but returns the HTTP status code alongside the body (-1 on connect failure). */
+    private fun postRaw(urlStr: String, body: String, soapAction: String): Pair<Int, String?> {
+        var conn: HttpURLConnection? = null
+        return try {
+            conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = timeoutMs
+                readTimeout = timeoutMs
+                doOutput = true
+                setRequestProperty(
+                    "Content-Type",
+                    "application/soap+xml; charset=utf-8; action=\"$soapAction\"",
+                )
+            }
+            conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            code to stream?.bufferedReader()?.use { it.readText() }
+        } catch (_: Exception) {
+            -1 to null
+        } finally {
+            conn?.disconnect()
+        }
     }
 
     private fun post(urlStr: String, body: String, soapAction: String): String? {
