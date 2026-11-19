@@ -55,7 +55,18 @@ jobs:
           name: Tilecam-release
           path: app/build/outputs/apk/release/*.apk
 
-      - name: Attach APKs to GitHub Release
+      - name: Publish/update "latest" release (every push to main)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          prerelease: true
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+
+      - name: Attach APKs to a versioned Release (on v* tags)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
