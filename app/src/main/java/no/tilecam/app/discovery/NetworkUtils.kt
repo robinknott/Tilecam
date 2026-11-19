@@ -92,6 +92,9 @@ object NetworkUtils {
             (p[2].toLong() shl 8) or p[3].toLong()
     }
 
+    /** Safe sort key: real IPs sort numerically; hostnames sort last instead of crashing. */
+    fun ipSortKey(host: String): Long = if (isIpv4(host)) ipToLong(host) else Long.MAX_VALUE
+
     fun longToIp(v: Long): String =
         "${(v shr 24) and 0xFF}.${(v shr 16) and 0xFF}.${(v shr 8) and 0xFF}.${v and 0xFF}"
 }

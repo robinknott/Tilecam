@@ -3,6 +3,7 @@ package no.tilecam.app.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -108,11 +109,18 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         scanJob?.cancel()
         _scan.value = _scan.value.copy(running = true, devices = emptyList(), error = null)
         scanJob = viewModelScope.launch {
-            container.discoveryManager.scanLan(
-                onProgress = { p -> _scan.value = _scan.value.copy(progress = p) },
-                onFound = { d -> addDevice(d) },
-            )
-            _scan.value = _scan.value.copy(running = false)
+            try {
+                container.discoveryManager.scanLan(
+                    onProgress = { p -> _scan.value = _scan.value.copy(progress = p) },
+                    onFound = { d -> addDevice(d) },
+                )
+            } catch (c: CancellationException) {
+                throw c
+            } catch (t: Throwable) {
+                _scan.value = _scan.value.copy(error = "Skanningen stoppet: ${t.message ?: t.javaClass.simpleName}")
+            } finally {
+                _scan.value = _scan.value.copy(running = false)
+            }
         }
     }
 
@@ -125,12 +133,19 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         scanJob?.cancel()
         _scan.value = _scan.value.copy(running = true, devices = emptyList(), error = null)
         scanJob = viewModelScope.launch {
-            container.discoveryManager.scanWan(
-                config = ScanConfig(cidrOrRange = range),
-                onProgress = { p -> _scan.value = _scan.value.copy(progress = p) },
-                onFound = { d -> addDevice(d) },
-            )
-            _scan.value = _scan.value.copy(running = false)
+            try {
+                container.discoveryManager.scanWan(
+                    config = ScanConfig(cidrOrRange = range),
+                    onProgress = { p -> _scan.value = _scan.value.copy(progress = p) },
+                    onFound = { d -> addDevice(d) },
+                )
+            } catch (c: CancellationException) {
+                throw c
+            } catch (t: Throwable) {
+                _scan.value = _scan.value.copy(error = "Skanningen stoppet: ${t.message ?: t.javaClass.simpleName}")
+            } finally {
+                _scan.value = _scan.value.copy(running = false)
+            }
         }
     }
 

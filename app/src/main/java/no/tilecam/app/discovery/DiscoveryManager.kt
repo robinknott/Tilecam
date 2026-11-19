@@ -65,7 +65,7 @@ class DiscoveryManager(private val context: Context) {
         }
 
         onProgress(ScanProgress("Done", found = merged.size))
-        return merged.values.sortedBy { NetworkUtils.ipToLong(it.host) }
+        return merged.values.sortedBy { NetworkUtils.ipSortKey(it.host) }
     }
 
     /** WAN / arbitrary IP-range scan with port scanning. */
@@ -88,7 +88,7 @@ class DiscoveryManager(private val context: Context) {
                 onProgress(ScanProgress("Scanning", done, total))
             },
             onFound = onFound,
-        ).sortedBy { NetworkUtils.ipToLong(it.host) }
+        ).sortedBy { NetworkUtils.ipSortKey(it.host) }
     }
 
     private fun mergeDevice(a: DiscoveredDevice, b: DiscoveredDevice): DiscoveredDevice {
