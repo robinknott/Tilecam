@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -74,6 +75,9 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
     private val _recSearch = MutableStateFlow(RecordingSearchState())
     val recSearch: StateFlow<RecordingSearchState> = _recSearch.asStateFlow()
+
+    private val _bulkStatus = MutableStateFlow<String?>(null)
+    val bulkStatus: StateFlow<String?> = _bulkStatus.asStateFlow()
 
     private var scanJob: Job? = null
 
@@ -178,14 +182,46 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
             when (val result = container.connectionResolver.connect(device, username, password, name)) {
                 is ConnectResult.Success -> {
                     container.credentialStore.save(result.camera.id, Credentials(username, password))
-                    container.cameraStore.upsert(cameras.value, result.camera)
+                    val updated = container.cameraStore.upsert(cameras.value, result.camera)
                     _connect.value = ConnectState(connecting = false)
                     _screen.value = Screen.Home
+                    // Many sites reuse one login on every camera — try it on the rest.
+                    tryCredentialsOnOthers(updated, device.host, username, password)
                 }
                 is ConnectResult.Failure -> {
                     _connect.value = ConnectState(connecting = false, error = result.reason)
                 }
             }
+        }
+    }
+
+    private fun tryCredentialsOnOthers(
+        baseList: List<Camera>,
+        excludeHost: String,
+        username: String,
+        password: String,
+    ) {
+        val others = _scan.value.devices.filter { it.host != excludeHost }
+        if (others.isEmpty()) return
+        viewModelScope.launch {
+            _bulkStatus.value = "Prøver samme pålogging på andre kameraer…"
+            var current = baseList
+            var added = 0
+            for (dev in others) {
+                if (current.any { it.host == dev.host }) continue
+                val res = runCatching {
+                    container.connectionResolver.connect(dev, username, password)
+                }.getOrNull()
+                if (res is ConnectResult.Success) {
+                    container.credentialStore.save(res.camera.id, Credentials(username, password))
+                    current = container.cameraStore.upsert(current, res.camera)
+                    added++
+                    _bulkStatus.value = "La til $added kamera med samme pålogging…"
+                }
+            }
+            _bulkStatus.value = if (added > 0) "La til $added ekstra kamera med samme pålogging." else null
+            delay(4000)
+            _bulkStatus.value = null
         }
     }
 

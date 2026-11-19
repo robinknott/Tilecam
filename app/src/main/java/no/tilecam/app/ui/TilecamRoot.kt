@@ -23,6 +23,7 @@ fun TilecamRoot(vm: MainViewModel) {
     val scan by vm.scan.collectAsStateWithLifecycle()
     val connect by vm.connect.collectAsStateWithLifecycle()
     val recSearch by vm.recSearch.collectAsStateWithLifecycle()
+    val bulkStatus by vm.bulkStatus.collectAsStateWithLifecycle()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -34,6 +35,7 @@ fun TilecamRoot(vm: MainViewModel) {
             is Screen.Home -> HomeScreen(
                 cameras = cameras,
                 urlFor = { vm.playableUrl(it) },
+                bulkStatus = bulkStatus,
                 onScan = { vm.navigate(Screen.Scan) },
                 onSettings = { vm.navigate(Screen.Settings) },
                 onOpenCamera = { vm.navigate(Screen.Player(it.id)) },

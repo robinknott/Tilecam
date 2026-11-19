@@ -30,6 +30,7 @@ import no.tilecam.app.ui.theme.Accent
 fun HomeScreen(
     cameras: List<Camera>,
     urlFor: (Camera) -> String?,
+    bulkStatus: String? = null,
     onScan: () -> Unit,
     onSettings: () -> Unit,
     onOpenCamera: (Camera) -> Unit,
@@ -48,10 +49,10 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
-                    if (cameras.isEmpty()) "Your cameras, one wall."
+                    bulkStatus ?: if (cameras.isEmpty()) "Your cameras, one wall."
                     else "${cameras.size} camera${if (cameras.size == 1) "" else "s"}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (bulkStatus != null) Accent else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Button(
